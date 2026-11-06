@@ -8,6 +8,7 @@ import {
 } from "react";
 import Icon from "./icon";
 import Editor from "./editor";
+import { browserRender } from "../lib/browser-render";
 import { compare, type Composition, type Row } from "../lib/domain";
 import {
   estimateImageCost,
@@ -32,6 +33,7 @@ type State = {
   brandId?: string;
   records: Record<string, Row[]>;
   hasKey: boolean;
+  renderMode?: "browser";
   worker: { last_seen: string } | null;
   models: { image: ImageModel[]; video: VideoModel[] };
 };
@@ -175,19 +177,32 @@ export default function Studio() {
     [search, setSearch] = useState(""),
     [menu, setMenu] = useState(false),
     [inspect, setInspect] = useState<Row | null>(null);
+  const [cloudSetup, setCloudSetup] = useState(false),
+    [setupToken, setSetupToken] = useState(""),
+    [exportProgress, setExportProgress] = useState<number | null>(null);
+  const exporting = useRef(false);
+  useEffect(() => {
+    const token = new URLSearchParams(location.hash.slice(1)).get("setup");
+    if (token) {
+      setSetupToken(token);
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+  }, []);
   const uploadRef = useRef<HTMLInputElement>(null);
   const records = state?.records || emptyRecords;
   const refresh = useCallback(async () => {
     try {
       const r = await fetch(
-        "/api/studio" +
-          (brandId ? "?brand=" + encodeURIComponent(brandId) : ""),
+        "/api/studio?_=" +
+          Date.now() +
+          (brandId ? "&brand=" + encodeURIComponent(brandId) : ""),
         { cache: "no-store" },
       );
       const b = await r.json();
       if (r.status === 401) {
         setAuth(true);
         setSetup(!b.configured);
+        setCloudSetup(b.setupRequired === true);
         return;
       }
       if (!r.ok) throw Error(b.error);
@@ -227,6 +242,39 @@ export default function Studio() {
     const result = await api(action, { brandId, ...data });
     await refresh();
     return result as Row;
+  }
+  async function exportCreative(p: Row) {
+    if (state?.renderMode !== "browser") return run("render", { id: p.id });
+    if (exporting.current) throw Error("An export is already running");
+    exporting.current = true;
+    setExportProgress(0);
+    let job: Row | undefined;
+    try {
+      job = await api("render", { brandId: p.brandId, id: p.id });
+      const output = await browserRender(
+        job!.composition as Composition,
+        setExportProgress,
+      );
+      const form = new FormData();
+      form.set("brandId", p.brandId);
+      form.set("renderJobId", job!.id);
+      form.set("file", output.blob, p.name + "." + output.extension);
+      const r = await fetch("/api/media", { method: "POST", body: form });
+      const data = await r.json();
+      if (!r.ok) throw Error(data.error || "Export upload failed");
+      await refresh();
+    } catch (e) {
+      if (job)
+        await api("render.fail", {
+          brandId: p.brandId,
+          id: job.id,
+          error: (e as Error).message,
+        }).catch(() => {});
+      throw e;
+    } finally {
+      exporting.current = false;
+      setExportProgress(null);
+    }
   }
   function task(fn: () => Promise<unknown>, message = "Saved") {
     setError("");
@@ -527,7 +575,24 @@ export default function Studio() {
   const selectedId = selected?.id;
   const saveComposition = useCallback(
     async (c: Composition) => {
-      await api("project.save", { brandId, id: selectedId, composition: c });
+      const saved = await api("project.save", {
+        brandId,
+        id: selectedId,
+        composition: c,
+      });
+      setState((prior) =>
+        prior
+          ? {
+              ...prior,
+              records: {
+                ...prior.records,
+                [saved.kind]: prior.records[saved.kind].map((row) =>
+                  row.id === saved.id ? saved : row,
+                ),
+              },
+            }
+          : prior,
+      );
     },
     [brandId, selectedId],
   );
@@ -564,8 +629,10 @@ export default function Studio() {
             <br />A lot of possibility.
           </h1>
           <p>
-            {setup
-              ? "Finish server setup to open your studio."
+            {setup || cloudSetup
+              ? cloudSetup
+                ? "Create a studio password using your one-time setup link."
+                : "Finish server setup to open your studio."
               : "Sign in to your private creative workspace."}
           </p>
           {setup ? (
@@ -580,18 +647,39 @@ export default function Studio() {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget);
                 task(async () => {
-                  await api("login", { password: fd.get("password") });
+                  await api(cloudSetup ? "setup" : "login", {
+                    password: fd.get("password"),
+                    token: setupToken,
+                  });
+                  setCloudSetup(false);
+                  setSetupToken("");
                   await refresh();
                 }, "Welcome to your studio");
               }}
             >
+              {cloudSetup && (
+                <label>
+                  One-time setup token
+                  <input
+                    name="token"
+                    type="password"
+                    value={setupToken}
+                    onChange={(e) => setSetupToken(e.target.value)}
+                    required
+                    autoComplete="off"
+                  />
+                </label>
+              )}
               <label>
                 Studio password
                 <input
                   type="password"
                   name="password"
                   required
-                  autoComplete="current-password"
+                  minLength={cloudSetup ? 16 : undefined}
+                  autoComplete={
+                    cloudSetup ? "new-password" : "current-password"
+                  }
                   placeholder="Enter your password"
                 />
               </label>
@@ -819,6 +907,21 @@ export default function Studio() {
               )}
             </div>
           </div>
+          {state?.renderMode === "browser" && (
+            <div className="cloud-demo-note">
+              Private shared demo · Uploads up to 25 MB · Exports up to 60
+              seconds at 720 px wide · Keep this tab visible during export.
+              Social publishing is sandbox only.
+            </div>
+          )}
+          {exportProgress !== null && (
+            <div className="cloud-demo-note" role="status">
+              Exporting video: {exportProgress}% —{" "}
+              {exportProgress === 100
+                ? "saving to your media library"
+                : "keep this tab visible"}
+            </div>
+          )}
           {error && (
             <div className="error-banner" role="alert">
               {error}
@@ -1261,10 +1364,14 @@ export default function Studio() {
                         project={selected}
                         assets={records.asset}
                         onSave={saveComposition}
+                        browserMode={state.renderMode === "browser"}
+                        rendering={exportProgress !== null}
                         onRender={() =>
                           task(
-                            () => run("render", { id: selected.id }),
-                            "MP4 render queued",
+                            () => exportCreative(selected),
+                            state.renderMode === "browser"
+                              ? "Video saved to your media library"
+                              : "MP4 render queued",
                           )
                         }
                       />
@@ -1365,8 +1472,10 @@ export default function Studio() {
                                       className="text-btn"
                                       onClick={() =>
                                         task(
-                                          () => run("render", { id: v.id }),
-                                          "Variant render queued",
+                                          () => exportCreative(v),
+                                          state.renderMode === "browser"
+                                            ? "Variant video saved"
+                                            : "Variant render queued",
                                         )
                                       }
                                     >
@@ -1744,7 +1853,8 @@ export default function Studio() {
                     </strong>
                     <small>
                       Or click to browse · MP4, WebM, PNG, JPG, WebP, MP3, WAV,
-                      M4A · 64 MB per file
+                      M4A · {state.renderMode === "browser" ? 25 : 64} MB per
+                      file
                     </small>
                   </div>
                   {filtered("asset").length ? (
@@ -2001,8 +2111,12 @@ export default function Studio() {
                       </div>
                     ) : (
                       <p className="muted">
-                        No jobs yet. AI generations, MP4 renders, and sandbox
-                        publishing run in the worker.
+                        No jobs yet. AI generation and sandbox publishing run in
+                        the worker. Video exports use{" "}
+                        {state.renderMode === "browser"
+                          ? "your open browser tab"
+                          : "FFmpeg"}
+                        .
                       </p>
                     )}
                   </section>

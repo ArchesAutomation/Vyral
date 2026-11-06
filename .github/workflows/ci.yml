@@ -17,3 +17,4 @@ jobs:
           FFMPEG_PATH: ffmpeg
           FFPROBE_PATH: ffprobe
       - run: npm run build
+      - run: npm run build:cloudflare

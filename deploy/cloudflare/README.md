@@ -22,7 +22,7 @@ Two secret bindings must exist and must not be committed: ENCRYPTION_KEY (64 ran
 
 The interface uses salted PBKDF2 passwords, hashed random session tokens, Secure/HttpOnly/SameSite cookies, origin checks, bounded bodies, file signature checks, encrypted provider keys, and private authenticated media delivery. This is a trusted owner demo, not a public multi-tenant SaaS.
 
-GitHub push-to-deploy is not configured. Deployments in this session used the connected Cloudflare API. The adapter TypeScript work was compiled and tested locally; the local workspace connection became unavailable before its source changes could be synchronized. This artifact preserves the running deployment, but rebuilding it from the existing Next.js source alone is not yet available. Recover/synchronize the adapter source before further development.
+GitHub push-to-deploy is not configured. Deployments in this session used the connected Cloudflare API. The editable adapter source is synchronized in cloudflare/, lib/browser-render.ts, and the shared React components. Run npm run build:cloudflare to rebuild from source; see docs/CLOUDFLARE.md. This directory retains the exact initial deployed artifact as a deployment checkpoint.
 
 ## Verification performed
 

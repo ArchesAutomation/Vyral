@@ -35,3 +35,7 @@
 6. Migrate to normalized Postgres, user/team auth/RLS, private object storage, scalable workers, and operational controls before public multi-tenant hosting.
 
 This delivery is a functional self-hosted foundation with a verified local creative/experimentation/sandbox loop. It does not complete the full production SaaS brief.
+
+## Cloudflare hosted demo update
+
+Workers, SQLite-backed Durable Objects, and private R2 are implemented for the shared owner demo. First-use password setup and authenticated sessions are included. The native Node/FFmpeg deployment remains available locally. Cloudflare uses foreground browser exports (60 seconds, 32 clips, 720 px wide, 25 MB output); MP4/WebM depends on browser support. Provider calls and sandbox scheduling use alarms. Live social integrations and separate team accounts remain unimplemented. See `CLOUDFLARE.md` for validation scope and deployment details.

@@ -7,7 +7,7 @@ export const dataDir = resolve(process.env.DATA_DIR || "data");
 mkdirSync(dataDir, { recursive: true });
 mkdirSync(resolve(dataDir, "media"), { recursive: true });
 export const db = new DatabaseSync(resolve(dataDir, "vyral.sqlite"));
-db.exec(`PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;
+db.exec(`PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL;
  CREATE TABLE IF NOT EXISTS records(id TEXT PRIMARY KEY,brand TEXT NOT NULL,kind TEXT NOT NULL,data TEXT NOT NULL,created TEXT NOT NULL,updated TEXT NOT NULL);
  CREATE INDEX IF NOT EXISTS records_brand_kind ON records(brand,kind);
  CREATE TABLE IF NOT EXISTS secrets(name TEXT PRIMARY KEY,value TEXT NOT NULL);

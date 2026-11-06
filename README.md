@@ -4,6 +4,10 @@ A private, brand-agnostic creative studio: inspiration → original project → 
 
 Next.js 16, React 19, TypeScript, native Node SQLite, a separate durable worker, and native FFmpeg. Dark charcoal workspace with warm orange accents. No external credentials are needed for editing, experiments, or sandbox publishing.
 
+## Cloudflare demo
+
+The hosted demo is at https://vyral.archesautomation.workers.dev/. Cloudflare Workers serves the React app and API, a SQLite Durable Object stores studio data, and private R2 stores media. No rendering Containers are used: exports run in the foreground browser, up to 60 seconds at 720 pixels wide, with a 25 MB file limit and 8 GB studio media quota. MP4 or WebM depends on browser encoder support. This is one password-protected owner workspace shared with trusted testers. See [Cloudflare deployment](docs/CLOUDFLARE.md) for setup, verification, limits, and rebuild instructions. AI usage is billed separately by the selected provider.
+
 ## Run locally
 
 Use **Node 24 LTS**, npm, FFmpeg and FFprobe (with drawtext support and an installed font).
@@ -55,11 +59,11 @@ Docker binds the app to localhost. Both services share the same persistent volum
 
 **This is a working personal-deployment foundation, not a completed hosted SaaS.** Live Instagram/YouTube/TikTok OAuth, Trial Reel posting, and automatic insights collection are not implemented. No external post is published. Automatic video analysis/OCR, transcription, automatic trend discovery, advanced transitions, AI edit operations, and multi-tenant team accounts remain future work.
 
-The current persistence is SQLite + disk, not Supabase/Postgres. One authenticated owner may access all their brands; brand scoping is not tenant isolation between unrelated users. Do not use this version to host multiple customer organizations. A persistent Node host is required; the current database/media implementation cannot be deployed unchanged to Vercel serverless.
+The local persistence is SQLite + disk; Cloudflare uses a SQLite Durable Object and R2, not Supabase/Postgres. One authenticated owner may access all their brands; brand scoping is not tenant isolation between unrelated users. Do not use this version to host multiple customer organizations. The local native FFmpeg version requires a persistent Node host. The Cloudflare adapter supplies hosted storage and browser exports.
 
 OpenRouter code is checked against the pinned upstream API implementation and mock tests, not a paid live call. Curated catalog availability/pricing can change. Video download currently accepts OpenRouter-owned HTTPS hosts only and deliberately rejects unknown output hosts rather than forwarding credentials. See `docs/PROVIDER_INTEGRATIONS.md`.
 
-Shot-segmentation experiments split continuous source footage without changing scene selection; this is not a full automatic recut engine. Preview playback is muted, with CSS color approximation; exported audio and color are encoded by FFmpeg. MP4 generation is a worker task, never a browser recording.
+Shot-segmentation experiments split continuous source footage without changing scene selection; this is not a full automatic recut engine. Preview playback is muted, with CSS color approximation; exported audio and color are encoded by FFmpeg. Local MP4 generation is a native worker task. The Cloudflare demo instead uses browser recording and has the limits described above.
 
 ## Verify
 

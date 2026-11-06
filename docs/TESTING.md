@@ -27,3 +27,7 @@ The extended browser journey uses `TEST_MEDIA=/absolute/path/source.png` and a r
 Local results: 19 automated checks passed with the native media test enabled. The production browser journey passed at 1440px desktop and 390px mobile with no page errors or horizontal overflow. Development-mode testing surfaced an unhandled Event from Next development tooling in this environment; the production build did not reproduce it. A same-origin sign-in defect caught during browser testing was fixed and retested.
 
 Live-provider tests are intentionally not run: no OpenRouter key, authorized social test account, or paid/live test flag was provided. Docker/remote CI and production deployment require their own verification.
+
+## Cloudflare adapter and browser export
+
+`npm test` includes `tests/cloudflare.test.mjs` and builds the Worker into a test module with a minimal DurableObject base. To repeat the full Chrome export journey against loopback SQL/R2 fixtures, run `node tests/cloudflare-fixture.mjs`, then in another terminal run `node tests/cloudflare-e2e.cjs`. Set `FFPROBE_PATH` to validate actual output geometry and 2-second duration as well. These fixtures are in-memory and loopback-only; credentials in them are disposable test values. The journey checks setup, brand creation, upload, autosave, export, full/range download, variants, scheduled sandbox approval, persistence, and desktop/mobile layout. It makes no paid request or live social post.

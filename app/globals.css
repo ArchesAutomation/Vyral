@@ -2404,3 +2404,5 @@ a:focus-visible,
     scroll-behavior: auto !important;
   }
 }
+
+.cloud-demo-note{padding:12px 16px;border:1px solid #ffffff18;border-radius:12px;color:#c4c1b9;font-size:12px;margin-bottom:16px;background:#ffffff04;line-height:1.6}

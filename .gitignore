@@ -1,4 +1,6 @@
 node_modules/
+/.cloudflare/
+/cloudflare/assets.ts
 .next/
 .env*
 !.env.example

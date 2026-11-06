@@ -7,6 +7,8 @@ type Props = {
   assets: Row[];
   onSave: (c: Composition) => Promise<void>;
   onRender: () => void;
+  browserMode?: boolean;
+  rendering?: boolean;
 };
 function Media({ clip, time }: { clip: Clip; time: number }) {
   const ref = useRef<HTMLVideoElement>(null);
@@ -38,7 +40,14 @@ function Media({ clip, time }: { clip: Clip; time: number }) {
     />
   );
 }
-export default function Editor({ project, assets, onSave, onRender }: Props) {
+export default function Editor({
+  project,
+  assets,
+  onSave,
+  onRender,
+  browserMode,
+  rendering,
+}: Props) {
   const [c, setC] = useState(project.composition as Composition),
     [time, setTime] = useState(0),
     [playing, setPlaying] = useState(false),
@@ -298,10 +307,13 @@ export default function Editor({ project, assets, onSave, onRender }: Props) {
               <input
                 type="number"
                 min="1"
-                max="180"
+                max={browserMode ? 60 : 180}
                 value={c.duration}
                 onChange={(e) => {
-                  const d = Math.max(1, Math.min(180, +e.target.value));
+                  const d = Math.max(
+                    1,
+                    Math.min(browserMode ? 60 : 180, +e.target.value),
+                  );
                   change({
                     ...c,
                     duration: d,
@@ -318,11 +330,11 @@ export default function Editor({ project, assets, onSave, onRender }: Props) {
           </div>
           <button
             className="primary full"
-            disabled={dirty || saving || !c.clips.length}
+            disabled={dirty || saving || rendering || !c.clips.length}
             onClick={onRender}
           >
             <Icon name="upload" />
-            Render MP4
+            {browserMode ? "Export video" : "Render MP4"}
           </button>
           {project.outputAssetId ? (
             <a
@@ -330,7 +342,7 @@ export default function Editor({ project, assets, onSave, onRender }: Props) {
               href={`/api/media/${project.outputAssetId}`}
               download
             >
-              Download latest MP4 ↗
+              {browserMode ? "Download latest video" : "Download latest MP4"}
             </a>
           ) : null}
         </section>
