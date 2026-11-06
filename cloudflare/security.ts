@@ -7,6 +7,7 @@ import {
 } from "node:crypto";
 import { db } from "./db.ts";
 import { runtime } from "./runtime.ts";
+import { validOwnerPassword } from "../lib/owner.ts";
 export const hash = (s: string) => createHash("sha256").update(s).digest("hex");
 export function secret(name: string) {
   return (
@@ -58,6 +59,7 @@ export function setKey(value: string) {
   putSecret("openrouter", encrypt(value));
 }
 export function setupRequired() {
+  if (validOwnerPassword(runtime().env.STUDIO_PASSWORD)) return false;
   return !secret("owner_password");
 }
 async function derive(password: string, salt: string) {
@@ -84,15 +86,20 @@ async function derive(password: string, salt: string) {
 export async function setPassword(password: string) {
   if (
     typeof password !== "string" ||
-    password.length < 16 ||
+    password.length < 8 ||
     password.length > 200
   )
-    throw Error("Use a password between 16 and 200 characters");
+    throw Error("Use a password between 8 and 200 characters");
   const salt = randomBytes(16).toString("hex");
   const derived = await derive(password, salt);
   putSecret("owner_password", `${salt}:${derived}`);
 }
 export async function checkPassword(password: string) {
+  if (!validOwnerPassword(password)) return false;
+  const configured = runtime().env.STUDIO_PASSWORD;
+  if (validOwnerPassword(configured)) {
+    return timingSafeEqual(Buffer.from(hash(password), "hex"), Buffer.from(hash(configured), "hex"));
+  }
   const stored = secret("owner_password");
   if (!stored) return false;
   const [salt, expected] = stored.split(":");
@@ -151,3 +158,4 @@ export function loginAllowed() {
   putSecret("login_limit", JSON.stringify(data));
   return data.count <= 10;
 }
+

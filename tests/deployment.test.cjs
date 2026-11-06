@@ -9,6 +9,7 @@ const env = {
   GITHUB_SHA: "a".repeat(40),
   GITHUB_TOKEN: "github-test",
   CLOUDFLARE_API_TOKEN: "cloudflare-test",
+  VYRAL_OWNER_PASSWORD: "qa-only-password",
   CLOUDFLARE_ACCOUNT_ID: "b".repeat(32),
 };
 const config = {
@@ -62,6 +63,8 @@ test("production release rejects local, PR and non-main execution", () => {
     { GITHUB_EVENT_NAME: "pull_request" },
     { GITHUB_REF: "refs/heads/feature" },
     { CLOUDFLARE_API_TOKEN: "" },
+    { VYRAL_OWNER_PASSWORD: "" },
+    { VYRAL_OWNER_PASSWORD: "short" },
   ])
     assert.throws(() => releaseContext({ ...env, ...changes }));
 });
@@ -83,10 +86,14 @@ test("merged verified release preserves secret bindings and checks private live 
     c.url.startsWith("https://api.cloudflare.com/"),
   );
   const metadata = JSON.parse(await upload.options.body.get("metadata").text());
-  assert.deepEqual(metadata.bindings.slice(-2), [
+  assert.deepEqual(metadata.bindings.slice(-3, -1), [
     { name: "ENCRYPTION_KEY", type: "inherit" },
     { name: "SETUP_TOKEN_HASH", type: "inherit" },
   ]);
   assert.ok(!JSON.stringify(metadata).includes("cloudflare-test"));
+  assert.deepEqual(metadata.bindings.at(-1), {
+    name: "STUDIO_PASSWORD", type: "secret_text", text: env.VYRAL_OWNER_PASSWORD,
+  });
   assert.ok(f.calls.some((c) => c.url.includes("/api/studio")));
 });
+

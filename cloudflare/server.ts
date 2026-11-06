@@ -22,6 +22,7 @@ import {
 import { storeMedia, serveMedia, startBrowserRender } from "./media.ts";
 import { generation, script } from "./providers.ts";
 import { client, css, assetVersion } from "./assets.ts";
+import { validOwnerUsername } from "../lib/owner.ts";
 const json = (
   value: unknown,
   status = 200,
@@ -77,6 +78,8 @@ export class VyralStudio extends DurableObject<Env> {
       if (["setup", "login"].includes(body.action)) {
         if (!loginAllowed())
           return json({ error: "Try again in a minute" }, 429);
+        if (!validOwnerUsername(body.username))
+          return json({ error: "Incorrect username or password" }, 401);
         if (body.action === "setup") {
           if (
             !setupRequired() ||
@@ -98,7 +101,7 @@ export class VyralStudio extends DurableObject<Env> {
           body.password.length > 200 ||
           !(await checkPassword(body.password))
         )
-          return json({ error: "Incorrect password" }, 401);
+          return json({ error: "Incorrect username or password" }, 401);
         return json({ ok: true }, 200, { "Set-Cookie": cookie(newSession()) });
       }
       if (!authorized(req)) return json({ error: "Sign in required" }, 401);
@@ -376,3 +379,4 @@ export default {
     return out;
   },
 };
+

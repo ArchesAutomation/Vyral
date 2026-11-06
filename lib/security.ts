@@ -6,9 +6,10 @@ import {
   timingSafeEqual,
 } from "node:crypto";
 import { db } from "./db.ts";
+import { validOwnerPassword } from "./owner.ts";
 export function configured() {
   return (
-    (process.env.STUDIO_PASSWORD?.length || 0) >= 16 &&
+    validOwnerPassword(process.env.STUDIO_PASSWORD) &&
     (process.env.SESSION_SECRET?.length || 0) >= 32
   );
 }
@@ -88,3 +89,4 @@ export function setKey(value: string) {
     "INSERT INTO secrets VALUES(?,?) ON CONFLICT(name) DO UPDATE SET value=excluded.value",
   ).run("openrouter", encrypt(value));
 }
+

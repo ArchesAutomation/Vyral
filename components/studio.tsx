@@ -8,6 +8,8 @@ import {
 } from "react";
 import Icon from "./icon";
 import Editor from "./editor";
+import { AppearanceProvider, AppearanceSettings, GlassBackdrop } from "./appearance";
+import { DEFAULT_OWNER_USERNAME } from "../lib/owner";
 import { browserRender } from "../lib/browser-render";
 import { compare, type Composition, type Row } from "../lib/domain";
 import {
@@ -164,6 +166,9 @@ function MediaThumb({ asset }: { asset?: Row }) {
   );
 }
 export default function Studio() {
+  return <AppearanceProvider><StudioWorkspace /></AppearanceProvider>;
+}
+function StudioWorkspace() {
   const [state, setState] = useState<State | null>(null),
     [view, setView] = useState<View>("home"),
     [brandId, setBrand] = useState(""),
@@ -648,6 +653,7 @@ export default function Studio() {
                 const fd = new FormData(e.currentTarget);
                 task(async () => {
                   await api(cloudSetup ? "setup" : "login", {
+                    username: fd.get("username"),
                     password: fd.get("password"),
                     token: setupToken,
                   });
@@ -671,12 +677,17 @@ export default function Studio() {
                 </label>
               )}
               <label>
+                Username
+                <input name="username" defaultValue={DEFAULT_OWNER_USERNAME} autoComplete="username" required />
+              </label>
+              <label>
                 Studio password
                 <input
                   type="password"
                   name="password"
                   required
-                  minLength={cloudSetup ? 16 : undefined}
+                  minLength={8}
+                  maxLength={200}
                   autoComplete={
                     cloudSetup ? "new-password" : "current-password"
                   }
@@ -784,6 +795,7 @@ export default function Studio() {
       </aside>
       <div className="main-shell">
         <header className="topbar">
+          <GlassBackdrop reflect />
           <button
             className="icon-btn mobile-menu"
             onClick={() => setMenu(!menu)}
@@ -796,6 +808,7 @@ export default function Studio() {
             <strong>{nav.find((n) => n.id === view)?.label}</strong>
           </div>
           <div className="topbar-actions">
+            <button className="text-btn appearance-shortcut" onClick={() => go("settings")} aria-label="Customize appearance">Appearance</button>
             <div className="search">
               <Icon name="search" />
               <input
@@ -930,10 +943,13 @@ export default function Studio() {
               </button>
             </div>
           )}
-          {!state ? (
+          {view === "settings" && !state?.brands.length ? (
+            <AppearanceSettings />
+          ) : !state ? (
             <div className="loading">Opening your studio…</div>
           ) : !state.brands.length ? (
             <section className="panel onboarding">
+                    <GlassBackdrop />
               <span className="eyebrow">
                 A BLANK CANVAS, FULL OF POSSIBILITY
               </span>
@@ -997,6 +1013,7 @@ export default function Studio() {
                       </div>
                     </section>
                     <section className="panel launchpad">
+                    <GlassBackdrop />
                       <div className="panel-head">
                         <h3>Your launchpad</h3>
                         <span className="muted">Make the next move</span>
@@ -1089,6 +1106,7 @@ export default function Studio() {
                   </div>
                   <div className="dashboard-bottom">
                     <section className="panel">
+                    <GlassBackdrop />
                       <div className="panel-head">
                         <h3>
                           In the making{" "}
@@ -1139,6 +1157,7 @@ export default function Studio() {
                       )}
                     </section>
                     <section className="panel">
+                    <GlassBackdrop />
                       <div className="panel-head">
                         <h3>Studio activity</h3>
                         <Badge>LIVE</Badge>
@@ -1214,6 +1233,7 @@ export default function Studio() {
                     </div>
                   ) : (
                     <section className="panel">
+                    <GlassBackdrop />
                       <Empty
                         icon="inspiration"
                         title="Build your inspiration library"
@@ -1310,6 +1330,7 @@ export default function Studio() {
                     </div>
                   ) : (
                     <section className="panel">
+                    <GlassBackdrop />
                       <Empty
                         icon="content"
                         title="From rough idea to ready to share"
@@ -1378,6 +1399,7 @@ export default function Studio() {
                     </>
                   ) : (
                     <section className="panel">
+                    <GlassBackdrop />
                       <Empty
                         icon="editor"
                         title="Every second is yours"
@@ -1522,6 +1544,7 @@ export default function Studio() {
                     })
                   ) : (
                     <section className="panel">
+                    <GlassBackdrop />
                       <Empty
                         icon="experiments"
                         title="The difference is in the details"
@@ -1563,6 +1586,7 @@ export default function Studio() {
                     )}
                   </div>
                   <section className="panel">
+                    <GlassBackdrop />
                     <div className="panel-head">
                       <h3>Publishing queue</h3>
                       <button
@@ -1702,6 +1726,7 @@ export default function Studio() {
                     ))}
                   </div>
                   <section className="panel">
+                    <GlassBackdrop />
                     <div className="panel-head">
                       <h3>Creative performance</h3>
                       <Badge>3-SECOND RETENTION</Badge>
@@ -1817,6 +1842,7 @@ export default function Studio() {
                     </div>
                   ) : (
                     <section className="panel">
+                    <GlassBackdrop />
                       <Empty
                         icon="intelligence"
                         title="Great creative gets better with evidence"
@@ -1909,7 +1935,9 @@ export default function Studio() {
               )}
               {view === "settings" && (
                 <div className="settings-grid">
+                  <AppearanceSettings />
                   <section className="panel">
+                    <GlassBackdrop />
                     <div className="panel-head">
                       <h3>Brand brain</h3>
                       <Badge>{activeBrand?.name}</Badge>
@@ -1984,6 +2012,7 @@ export default function Studio() {
                     </button>
                   </section>
                   <section className="panel">
+                    <GlassBackdrop />
                     <div className="panel-head">
                       <h3>OpenRouter</h3>
                       <Badge>
@@ -2031,6 +2060,7 @@ export default function Studio() {
                     </small>
                   </section>
                   <section className="panel wide">
+                    <GlassBackdrop />
                     <div className="panel-head">
                       <h3>Social connections</h3>
                       <Badge>EXPORT & SANDBOX</Badge>
@@ -2060,6 +2090,7 @@ export default function Studio() {
                     </p>
                   </section>
                   <section className="panel wide">
+                    <GlassBackdrop />
                     <div className="panel-head">
                       <h3>Background jobs</h3>
                       <Badge>
@@ -2135,6 +2166,7 @@ export default function Studio() {
               )}
               {view === "generation" && (
                 <section className="panel generation-history">
+                    <GlassBackdrop />
                   <div className="panel-head">
                     <h3>Generation history</h3>
                     <Badge>
@@ -2448,6 +2480,7 @@ function Generation({
   return (
     <div className="generation-layout">
       <section className="panel generation-form">
+                    <GlassBackdrop />
         <div className="segmented">
           <button
             className={kind === "image" ? "selected" : ""}
@@ -2683,3 +2716,4 @@ function Generation({
     </div>
   );
 }
+

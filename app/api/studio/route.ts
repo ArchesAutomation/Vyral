@@ -8,6 +8,7 @@ import {
 } from "../../../lib/security.ts";
 import { limitedBody } from "../../../lib/http.ts";
 import { act, state } from "../../../lib/services.ts";
+import { validOwnerUsername } from "../../../lib/owner.ts";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const attempts = new Map<string, { count: number; at: number }>();
@@ -17,7 +18,7 @@ export async function GET(req: Request) {
       {
         error: configured()
           ? "Sign in to your studio"
-          : "Set STUDIO_PASSWORD (16+ characters) and SESSION_SECRET (32+ characters) in .env.local",
+          : "Set STUDIO_PASSWORD (8–200 characters) and SESSION_SECRET (32+ characters) in .env.local",
         configured: configured(),
       },
       { status: 401 },
@@ -53,9 +54,9 @@ export async function POST(req: Request) {
           { error: "Try again in a minute" },
           { status: 429 },
         );
-      if (!checkPassword(String(body.password || "")))
+      if (!validOwnerUsername(body.username) || !checkPassword(String(body.password || "")))
         return NextResponse.json(
-          { error: "Incorrect password or missing server configuration" },
+          { error: "Incorrect username or password, or missing server configuration" },
           { status: 401 },
         );
       const r = NextResponse.json({ ok: true });
@@ -80,3 +81,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });
   }
 }
+

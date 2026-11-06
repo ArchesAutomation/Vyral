@@ -19,7 +19,7 @@ npm ci
 cp .env.example .env.local
 ```
 
-Set `STUDIO_PASSWORD` (16+ characters), `SESSION_SECRET` (32+ characters), and `ENCRYPTION_KEY` (64 hex characters). Generate a key with:
+Sign in with username `Nick`. Set `STUDIO_PASSWORD` (8–200 characters), `SESSION_SECRET` (32+ characters), and `ENCRYPTION_KEY` (64 hex characters). For Cloudflare, configure the private GitHub Actions secret described in [Owner login](docs/OWNER_LOGIN.md). Generate a key with:
 
 ```sh
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
@@ -78,3 +78,4 @@ npm run build
 To include the real media integration test, set `FFMPEG_PATH=ffmpeg` and `FFPROBE_PATH=ffprobe` (or absolute paths) before `npm test`. Browser journey instructions are in `docs/TESTING.md`.
 
 Start with `docs/IMPLEMENTATION_STATUS.md` for completion evidence and prioritized remaining work. Source provenance and license decisions are in `docs/OPEN_SOURCE_AUDIT.md`.
+

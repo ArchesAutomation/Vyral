@@ -29,6 +29,7 @@ export interface Env {
   SETUP_TOKEN_HASH: string;
   STUDIO_ID?: string;
   OPENROUTER_API_KEY?: string;
+  STUDIO_PASSWORD?: string;
 }
 export interface StudioContext {
   storage: StudioStorage;
@@ -42,3 +43,4 @@ export function runtime() {
 export function inStudio<T>(ctx: StudioContext, env: Env, fn: () => T): T {
   return scope.run({ ctx, env }, fn);
 }
+
