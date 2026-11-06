@@ -12,6 +12,8 @@ The agent's instruction to wait for Nick's approval remains essential. The pipel
 
 ## One-time activation
 
+The owner-login update additionally requires the private Actions secret `VYRAL_OWNER_PASSWORD` (8–200 characters). The reviewed deployment script injects it as a Cloudflare `secret_text` binding during the approved-main deployment; it is never stored in checked-in metadata or logs. Missing credentials stop the release before mutation. See [Owner login](OWNER_LOGIN.md).
+
 Before merging the setup PR, add a repository or production-environment GitHub Actions secret named `CLOUDFLARE_API_TOKEN` with Workers Scripts Edit permission for the existing Cloudflare account. The account ID is public configuration in the workflow. Use a scoped deployment token; never paste it into chat or commit it. Existing Worker secrets must already be configured and must be preserved. The connected ChatGPT Cloudflare plugin's credentials are not automatically available to GitHub Actions.
 
 The first approved merge activates the workflow. Without the deployment secret, verification can pass but deployment fails clearly and keeps the previous site running. This setup PR has not been merged or deployed by the agent. Live automatic deployment cannot be claimed until credentials are connected and an approved merged run passes.
@@ -19,3 +21,4 @@ The first approved merge activates the workflow. Without the deployment secret, 
 Prefer GitHub branch protection/rulesets requiring PRs and the verify check; do not silently enable requirements that prevent a sole repository owner from merging their own work. Configure those settings only through a reviewed request.
 
 When a release fails, diagnose it and prepare a corrective PR or reviewed revert. Never bypass the process using the hosting dashboard or a plugin. Never regenerate the encryption key during routine deployment. Keep source, deployment scripts, and configuration in GitHub.
+

@@ -9,6 +9,7 @@ import {
 import Icon from "./icon";
 import Editor from "./editor";
 import { AppearanceProvider, AppearanceSettings, GlassBackdrop } from "./appearance";
+import { DEFAULT_OWNER_USERNAME } from "../lib/owner";
 import { browserRender } from "../lib/browser-render";
 import { compare, type Composition, type Row } from "../lib/domain";
 import {
@@ -652,6 +653,7 @@ function StudioWorkspace() {
                 const fd = new FormData(e.currentTarget);
                 task(async () => {
                   await api(cloudSetup ? "setup" : "login", {
+                    username: fd.get("username"),
                     password: fd.get("password"),
                     token: setupToken,
                   });
@@ -675,12 +677,17 @@ function StudioWorkspace() {
                 </label>
               )}
               <label>
+                Username
+                <input name="username" defaultValue={DEFAULT_OWNER_USERNAME} autoComplete="username" required />
+              </label>
+              <label>
                 Studio password
                 <input
                   type="password"
                   name="password"
                   required
-                  minLength={cloudSetup ? 16 : undefined}
+                  minLength={8}
+                  maxLength={200}
                   autoComplete={
                     cloudSetup ? "new-password" : "current-password"
                   }

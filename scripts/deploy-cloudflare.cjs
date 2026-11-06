@@ -24,10 +24,14 @@ function releaseContext(env) {
     throw Error(
       "Deployment credentials are missing. Configure CLOUDFLARE_API_TOKEN in GitHub Actions secrets; do not deploy manually",
     );
+  if (typeof env.VYRAL_OWNER_PASSWORD !== "string" || env.VYRAL_OWNER_PASSWORD.length < 8 || env.VYRAL_OWNER_PASSWORD.length > 200)
+    throw Error("Set VYRAL_OWNER_PASSWORD to an 8–200 character password in GitHub Actions secrets before releasing");
   return { repository: env.GITHUB_REPOSITORY, sha: env.GITHUB_SHA };
 }
 
-function uploadMetadata(config) {
+function uploadMetadata(config, ownerPassword) {
+  if (typeof ownerPassword !== "string" || ownerPassword.length < 8 || ownerPassword.length > 200)
+    throw Error("Owner login secret is missing or invalid");
   if (
     config.name !== "vyral" ||
     config.main_module !== "worker.js" ||
@@ -48,6 +52,7 @@ function uploadMetadata(config) {
       ...config.bindings,
       { name: "ENCRYPTION_KEY", type: "inherit" },
       { name: "SETUP_TOKEN_HASH", type: "inherit" },
+      { name: "STUDIO_PASSWORD", type: "secret_text", text: ownerPassword },
     ],
   };
 }
@@ -94,6 +99,7 @@ async function deploy({
     );
   const metadata = uploadMetadata(
     JSON.parse(read("cloudflare/deployment.json")),
+    env.VYRAL_OWNER_PASSWORD,
   );
   const code = read(".cloudflare/worker.js");
   const form = new FormData();
@@ -157,3 +163,4 @@ if (require.main === module)
       console.error(error.message);
       process.exitCode = 1;
     });
+

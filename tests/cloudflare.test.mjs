@@ -17,7 +17,7 @@ fs.writeFileSync(".cloudflare/test-worker.mjs", built);
 const { VyralStudio } = await import(
   pathToFileURL(path.resolve(".cloudflare/test-worker.mjs")).href
 );
-function fixture() {
+function fixture(overrides = {}) {
   const sqlite = new DatabaseSync(":memory:"),
     objects = new Map();
   let alarm = null;
@@ -53,6 +53,7 @@ function fixture() {
     },
   };
   const env = {
+    ...overrides,
     ENCRYPTION_KEY: "ab".repeat(32),
     SETUP_TOKEN_HASH: createHash("sha256")
       .update("test-setup-token")
@@ -111,18 +112,21 @@ test("Cloudflare authenticated persistence, R2 export, origin checks and durable
   assert.equal((await r.json()).setupRequired, true);
   r = await f.fetch("/api/studio", {
     action: "setup",
+    username: "Nick",
     token: "wrong",
     password: "correct-password-for-tests",
   });
   assert.equal(r.status, 403);
   r = await f.fetch("/api/studio", {
     action: "setup",
+    username: "Nick",
     token: "test-setup-token",
     password: "correct-password-for-tests",
   });
   assert.equal(r.status, 200);
   r = await f.fetch("/api/studio", {
     action: "setup",
+    username: "Nick",
     token: "test-setup-token",
     password: "another-password-for-tests",
   });
@@ -208,7 +212,31 @@ test("Cloudflare authenticated persistence, R2 export, origin checks and durable
   assert.equal(r.status, 401);
   r = await f.fetch("/api/studio", {
     action: "login",
+    username: "Nick",
     password: "correct-password-for-tests",
   });
   assert.equal(r.status, 200);
 });
+
+test("private deployment credentials enforce Nick login and keep secrets out of responses", async () => {
+  const f = fixture({ STUDIO_PASSWORD: "qa-test1" });
+  let r = await f.fetch();
+  assert.equal(r.status, 401);
+  const unauthenticated = await r.json();
+  assert.equal(unauthenticated.setupRequired, false);
+  assert.ok(!JSON.stringify(unauthenticated).includes("qa-test1"));
+  for (const username of [undefined, "Other", "nick"]) {
+    r = await f.fetch("/api/studio", { action: "login", username, password: "qa-test1" });
+    assert.equal(r.status, 401);
+    assert.equal(r.headers.get("set-cookie"), null);
+  }
+  r = await f.fetch("/api/studio", { action: "login", username: "Nick", password: "incorrect" });
+  assert.equal(r.status, 401);
+  r = await f.fetch("/api/studio", { action: "login", username: "Nick", password: "qa-test1" });
+  assert.equal(r.status, 200);
+  assert.ok(r.headers.get("set-cookie").includes("HttpOnly"));
+  assert.ok(!(await r.text()).includes("qa-test1"));
+  r = await f.fetch();
+  assert.equal(r.status, 200);
+});
+
