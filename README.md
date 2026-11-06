@@ -10,6 +10,8 @@ The hosted demo is at https://vyral.archesautomation.workers.dev/. Cloudflare Wo
 
 ## Run locally
 
+All changes follow [the GitHub review and release workflow](docs/RELEASE_WORKFLOW.md): feature branch, PR, Nick's explicit approval, merge, then automatic production deployment after checks pass. The initial automation setup requires a `CLOUDFLARE_API_TOKEN` GitHub Actions secret before its first approved merge. Agents must never deploy directly from an unmerged branch or local working copy.
+
 Use **Node 24 LTS**, npm, FFmpeg and FFprobe (with drawtext support and an installed font).
 
 ```sh

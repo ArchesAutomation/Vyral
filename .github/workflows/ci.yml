@@ -1,5 +1,7 @@
 name: Studio checks
 on: [push, pull_request]
+permissions:
+  contents: read
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -18,3 +20,37 @@ jobs:
           FFPROBE_PATH: ffprobe
       - run: npm run build
       - run: npm run build:cloudflare
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-cloudflare-worker
+          path: .cloudflare/worker.js
+          include-hidden-files: true
+          retention-days: 2
+
+  deploy:
+    name: Deploy approved main
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      pull-requests: read
+    concurrency:
+      group: vyral-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-cloudflare-worker
+          path: .cloudflare
+      - name: Deploy the verified merged commit
+        run: node scripts/deploy-cloudflare.cjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: eeaf93488e62f308917b45b18308abfd

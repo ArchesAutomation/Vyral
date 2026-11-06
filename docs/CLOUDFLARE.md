@@ -22,7 +22,7 @@ Run `npm ci`, `npm run typecheck`, `npm test`, `npm run build`, and `npm run bui
 
 `cloudflare/deployment.json` is Cloudflare multipart upload metadata, not Wrangler configuration. Upload `.cloudflare/worker.js` through the Workers script API as a JavaScript module, with that metadata and secret bindings `ENCRYPTION_KEY` (64 random hex characters) and `SETUP_TOKEN_HASH`. On first creation only, include `migrations: {new_tag: "v1", new_sqlite_classes: ["VyralStudio"]}`. Enable the script's workers.dev subdomain. Subsequent uploads must preserve the encryption secret, bindings, migration history, and production `STUDIO_ID: owner`. Never regenerate the encryption key for an existing studio or provider credentials cannot be decrypted.
 
-Deployment was performed through the connected Cloudflare API. GitHub pushes are not yet wired to automatic production deployment. Future deployment automation requires a scoped Cloudflare token or Cloudflare Git integration; do not commit tokens or the one-time setup link.
+The initial deployment was performed through the connected Cloudflare API. All future production changes must follow the GitHub review policy in `AGENTS.md` and `RELEASE_WORKFLOW.md`: PR, Nick's explicit approval, merge, verified CI deployment. Do not repeat manual plugin/API/CLI uploads. The proposed Studio checks workflow includes a main-only deployment job; it becomes active after the setup PR is approved/merged and the `CLOUDFLARE_API_TOKEN` GitHub Actions secret is connected. Never commit tokens or the one-time setup link.
 
 The API metadata enables sampled logs and traces. Avoid logging request bodies, passwords, setup tokens, media contents, or provider keys. Existing unrelated Workers are unchanged.
 
