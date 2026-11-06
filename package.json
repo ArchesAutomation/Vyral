@@ -1,0 +1,30 @@
+{
+  "name": "vyral",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "dev": "node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1",
+    "build": "node node_modules/next/dist/bin/next build --webpack",
+    "start": "node node_modules/next/dist/bin/next start --hostname 0.0.0.0",
+    "worker": "node --experimental-strip-types --env-file-if-exists=.env.local workers/runner.ts",
+    "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/*.test.ts tests/*.test.mjs tests/*.test.cjs",
+    "build:cloudflare": "node scripts/build-cloudflare.cjs",
+    "test:e2e": "node tests/e2e.mjs"
+  },
+  "dependencies": {
+    "next": "16.4.3",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "playwright": "1.58.2"
+  }
+}

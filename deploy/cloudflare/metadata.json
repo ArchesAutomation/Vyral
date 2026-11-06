@@ -1,0 +1,32 @@
+{
+  "main_module": "worker.js",
+  "compatibility_date": "2026-11-06",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.1,
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 0.1
+    }
+  },
+  "bindings": [
+    {
+      "type": "durable_object_namespace",
+      "name": "STUDIO",
+      "class_name": "VyralStudio"
+    },
+    {
+      "type": "r2_bucket",
+      "name": "MEDIA",
+      "bucket_name": "vyral-media"
+    },
+    {
+      "type": "plain_text",
+      "name": "STUDIO_ID",
+      "text": "owner"
+    }
+  ]
+}

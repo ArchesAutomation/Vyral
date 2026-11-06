@@ -1,0 +1,9 @@
+node_modules/
+/.cloudflare/
+/cloudflare/assets.ts
+.next/
+.env*
+!.env.example
+data/
+*.tsbuildinfo
+test-results/
