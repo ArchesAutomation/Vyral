@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "../vendor/nordify/liquid-glass.css";
 export const metadata: Metadata = {
   title: "Vyral — Creative OS",
   description:
@@ -12,3 +13,4 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     </html>
   );
 }
+

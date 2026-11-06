@@ -97,7 +97,8 @@ function bundle(entry, browser) {
   );
 }
 const client = bundle("cloudflare/client.tsx", true),
-  css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
+  css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8") + "\n" +
+    fs.readFileSync(path.join(root, "vendor/nordify/liquid-glass.css"), "utf8");
 const assetVersion = require("node:crypto")
   .createHash("sha256")
   .update(client + css)
@@ -123,3 +124,4 @@ console.log(
     workerGzipBytes: zlib.gzipSync(worker).length,
   }),
 );
+
